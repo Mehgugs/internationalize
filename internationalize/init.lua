@@ -181,8 +181,6 @@ function i18n_t:set(key, value)
         node = node[k]
     end
 
-    print(key, path[length])
-
     if path[length] == 'other' then setmetatable(node, plural_table) end
 
     node[path[length]] = newstr(value)
@@ -203,7 +201,7 @@ local function recursive_load_back(self, current_context, N, data)
                 self:set(table.concat(rev(n, n//2, n, myctx), "."), v)
             end
         else
-            return recursive_load_back(self, myctx, n, v)
+            recursive_load_back(self, myctx, n, v)
         end
     end
 end
@@ -223,7 +221,7 @@ local function recursive_load(self, current_context, N, data)
         if type(v) == 'string' then
             self:set(table.concat(myctx, "."), v)
         else
-            return recursive_load(self, myctx, n, v)
+            recursive_load(self, myctx, n, v)
         end
     end
 end
