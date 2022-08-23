@@ -127,7 +127,7 @@ Sets a variable across multiple locales. The data should look like this:
 
 {
     var = {
-        en {
+        en = {
             GB = "Like this innit",
             US = "Like this"
         }
