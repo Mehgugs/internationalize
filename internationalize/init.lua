@@ -107,16 +107,16 @@ local function pluralize(node, data, root, V) data = data or {}
     return node[plural_form]
 end
 
-local function treat(node, data, root)
+local function treat(node, data, root, self, locale)
     local mt = getmetatable(node)
     if type(node) == 'string' then
         return node
     elseif mt and mt.__i18n_istr then
-        return interpolate(node, data)
+        return interpolate(node, data, self, locale)
     elseif mt and mt.__i18n_plural then
         local pf = pluralize(node, data, root, mt.__i18n_plural(node))
         if getmetatable(pf).__i18n_istr then
-            return interpolate(pf, data)
+            return interpolate(pf, data, self, locale)
         else
             return pf
         end
@@ -135,7 +135,7 @@ local function localized_translate(self, key, loc, data)
         if not node then return nil end
     end
 
-    return treat(node, data, locale_root(loc))
+    return treat(node, data, locale_root(loc), self, loc)
 end
 
 
@@ -194,7 +194,7 @@ local function recursive_load_back(self, current_context, N, data)
         local n = N + 1
         local myctx = table.move(current_context, 1, N, 1,  {})
         myctx[n] = tostring(k)
-        if type(v) == 'string' then
+        if type(v) == 'string' or v.other then
             if n > 2 then
                 self:set(table.concat(rev(n-2, (n-2)//2, n-2, rev(n-1, (n-1)//2, n-1, myctx)), "."), v)
             else

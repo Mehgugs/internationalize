@@ -11,13 +11,21 @@ function interp_t:__tostring()
     return table.concat(out)
 end
 
-local function interpolate(self, data)
+local function interpolate(self, data, i18n, locale)
     local out = {}
     for i = 1, #self do
         if type(self[i]) == 'string' then table.insert(out, self[i])
         else
             local interp = self[i]
-            local value = data[interp.key]
+            local value
+            if interp.ref then
+                value = i18n:translate(interp.key, data, locale)
+                if value == nil then
+                    error("Reference @"..interp.key.." was not defined for "..("%q"):format(locale).." or any fallbacks.")
+                end
+            else
+                value = data[interp.key]
+            end
             if interp.modifier then
                 table.insert(out, interp.modifier:format(value))
             else
@@ -55,12 +63,15 @@ local function build_interp_string(s)
                 cur = nil
             end
 
-            local st, e, key = s:find("^%s*([%a_][%w_]*)", i+2)
+            local st, e, ref, key = s:find("^%s*(@?)([%.%w_]*)", i+2)
 
             if key then
-                local interp = {key = key}
+                local interp = {key = key, ref = ref == "@"}
+                if (ref ~= "@") and key:find(".", 1, true) then
+                    return error("Malformed interpolated string @"..(st -1).."in "..("%q"):format(s))
+                end
                 table.insert(out, interp)
-                table.insert(vars, key)
+                if ref ~= "@" then table.insert(vars, key) end
 
                 local _, e_, modify = s:find("^%s*([^}]+)}", e + 1)
 
